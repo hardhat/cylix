@@ -179,7 +179,6 @@ void reset_sprite(void)
 {
     last_sprite_count = sprite_count;
     sprite_count=0;
-    memset(sprites, 0, sizeof(sprites));
 }
 
 void add_sprite(uint16_t x, uint8_t y, uint8_t sprite, uint16_t flags)
@@ -195,13 +194,17 @@ void add_sprite(uint16_t x, uint8_t y, uint8_t sprite, uint16_t flags)
 void render_sprites(void)
 {
     uint8_t count = sprite_count;
-    if(count < last_sprite_count) count = last_sprite_count;
+    if(count < last_sprite_count) {
+        // Clear only the stale tail left over from the previous, larger frame
+        memset(&sprites[sprite_count], 0, (last_sprite_count - sprite_count) * sizeof(gfx_sprite));
+        count = last_sprite_count;
+    }
     gfx_sprite_render_array(&ctx, 0, sprites, count);
 }
 
 void clear_sprites(void)
 {
-    reset_sprite();
+    memset(sprites, 0, sizeof(sprites));
     sprite_count=128;
     render_sprites();
     sprite_count=0;

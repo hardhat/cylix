@@ -13,8 +13,8 @@ struct Bullet bullets[BULLET_COUNT];
 #define STAR_COUNT 16 // Number of stars in the star field
 #define STAR_RADIUS 80 // Fixed orbit radius for stars before perspective projection
 uint8_t star_angle[STAR_COUNT];
-int16_t star_z[STAR_COUNT];
-int star_count = STAR_COUNT;
+uint8_t star_z[STAR_COUNT];
+uint8_t star_count = STAR_COUNT;
 
 const struct EnemySprite {
     uint8_t index[3];       // Tile index for ship pointing up, up-right, and right
@@ -38,9 +38,9 @@ void game_init() {
     player.health = 100;
     player.score = 0;
     // Initialize star field
-    for(int i=0;i<star_count;i++) {
+    for(uint8_t i=0;i<star_count;i++) {
         star_angle[i] = rand() % 256; // Random angle in range [0, 255]
-        star_z[i] = rand() % 256 + 1; // Random z position in range [1, 256]
+        star_z[i] = rand() % 200 + 1; // Random z position in range [1, 200], matches reset value
     }
 
     const uint8_t stage_map[4]={49,50,51,33};
@@ -95,7 +95,7 @@ void add_enemy(uint8_t angle, uint8_t z) {
 
 int active_enemy_count() {
     int count = 0;
-    for(int i=0;i<formation.count;i++) {
+    for(uint8_t i=0;i<formation.count;i++) {
         if(formation.enemies[i].state == ENEMY_STATE_ACTIVE) {
             count++;
         }
@@ -105,11 +105,11 @@ int active_enemy_count() {
 
 void add_enemy_formation() {
     // Add enemies based on the current formation
-    for(int i=0;i<formation.count;i++) {
+    for(uint8_t i=0;i<formation.count;i++) {
         if(formation.enemies[i].state == ENEMY_STATE_ACTIVE) {
-            // Calculate the angle and z position for the enemy
-            uint8_t angle = (formation.angle + (i * 32)) % 256; // Spread enemies around the formation angle
-            uint8_t z = formation.z + (i * 16); // Spread enemies in depth
+            // Spread enemies around the formation angle/depth; uint8_t wrap replaces need for %256
+            uint8_t angle = formation.angle + (i << 5);
+            uint8_t z = formation.z + (i << 4);
             add_enemy(angle, z);
         }
     }
@@ -117,37 +117,38 @@ void add_enemy_formation() {
 
 void game_update() {
     // Update game logic here
-    player.angle = (player.angle + player.dx) % 256; // Rotate player angle
-    player.x = ((90 * sin88(player.angle))>>8) + 160; // Move player in a circular path
-    player.y = ((90 * cos88(player.angle))>>8) + 120; // Move player in a circular path
+    player.angle = player.angle + player.dx; // uint8_t wrap replaces need for %256
+    player.x = player_offset_x(player.angle) + 160; // Move player in a circular path
+    player.y = player_offset_y(player.angle) + 120; // Move player in a circular path
     player.orientation = ((player.angle+16) >> 5) & 0x07; // Determine orientation based on angle
     // Update formation angle and z position
-    formation.angle = (formation.angle + formation.angle_speed) % 256;
+    formation.angle = formation.angle + formation.angle_speed; // uint8_t wrap replaces need for %256
     formation.z += formation.z_speed;
 
     reset_sprite();
     // Render game graphics here (anchor in bottom center)
 
     // Star field background -- make stars move towards you with a vanishing point in the center of the screen
-    for(int i=0;i<star_count;i++) {
+    for(uint8_t i=0;i<star_count;i++) {
         uint8_t angle = star_angle[i];
-        int16_t z = star_z[i];
+        uint8_t z = star_z[i];
 
-        // Move the star towards the player
-        z -= 4;
-        if(z <= 0) {
+        // Move the star towards the player; check before subtracting to avoid unsigned underflow
+        if(z <= 4) {
             // Reset the star to a new random angle
             z = 200; //rand() % 256 + 1; // Avoid division by zero
             angle = rand() % 256;
+        } else {
+            z -= 4;
         }
 
         // Compute the star's position on a fixed-radius orbit
-        int16_t x = (STAR_RADIUS * sin88(angle)) >> 8;
-        int16_t y = (STAR_RADIUS * cos88(angle)) >> 8;
+        int16_t x = star_offset_x(angle);
+        int16_t y = star_offset_y(angle);
 
-        // Project the star's position onto the screen
-        int16_t screen_x = (x * 128) / z + 160; // Centered at (160, 120)
-        int16_t screen_y = (y * 128) / z + 120;
+        // Project the star's position onto the screen (reciprocal-multiply replaces divide)
+        int16_t screen_x = div128(x, z) + 160; // Centered at (160, 120)
+        int16_t screen_y = div128(y, z) + 120;
 
         // Draw the star if it's within the screen bounds
         if(screen_x >= 0 && screen_x < 320 && screen_y >= 0 && screen_y < 240) {
