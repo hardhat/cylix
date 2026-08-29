@@ -16,8 +16,6 @@ uint8_t star_angle[STAR_COUNT];
 int16_t star_z[STAR_COUNT];
 int star_count = STAR_COUNT;
 
-
-
 const struct EnemySprite {
     uint8_t index[3];       // Tile index for ship pointing up, up-right, and right
 } enemy_sprite[4] = {
@@ -70,28 +68,15 @@ void game_init() {
     }
 }
 
-void game_update() {
-    // Update game logic here
-    player.angle = (player.angle + player.dx) % 256; // Rotate player angle
-    player.x = ((90 * sin88(player.angle))>>8) + 160; // Move player in a circular path
-    player.y = ((90 * cos88(player.angle))>>8) + 120; // Move player in a circular path
-    player.orientation = ((player.angle+16) >> 5) & 0x07; // Determine orientation based on angle
-    // Update formation angle and z position
-    formation.angle = (formation.angle + formation.angle_speed) % 256;
-    formation.z += formation.z_speed;
-
-    // Additional game update code here
-}
-
 void add_enemy(uint8_t angle, uint8_t z) {
     // Calculate the orientation
-    uint8_t orientation = ((angle+16) >> 5) & 0x07; // Determine orientation based on angle
+    uint8_t orientation = ((angle+16+128) >> 5) & 0x07; // Determine orientation based on angle
     // Determine the flags
     uint8_t enemy_size = z>>6; // Determine enemy size based on distance (z)
     // Frames are: 2,3,18,19=up, 4,5,20,21=up-right, 6,7,22,23=right - then mirror for rest.
     bool corner = orientation & 0x01; // Check if orientation is a corner (odd)
     bool vertical = (orientation & 0x02) == 0; // Check if orientation is vertical (0 or 1)
-    uint8_t enemy_index = enemy_sprite[enemy_size].index[(corner ? 2 : (vertical ? 0 : 4))];  // orientation
+    uint8_t enemy_index = enemy_sprite[enemy_size].index[(corner ? 1 : (vertical ? 0 : 2))];  // orientation
     // Flip flags per orientation don't follow a clean bit pattern, so use a lookup table
     static const uint8_t orientation_flags[8] = {
         SPRITE_FLAG_NONE,
@@ -130,7 +115,16 @@ void add_enemy_formation() {
     }
 }
 
-void game_render() {
+void game_update() {
+    // Update game logic here
+    player.angle = (player.angle + player.dx) % 256; // Rotate player angle
+    player.x = ((90 * sin88(player.angle))>>8) + 160; // Move player in a circular path
+    player.y = ((90 * cos88(player.angle))>>8) + 120; // Move player in a circular path
+    player.orientation = ((player.angle+16) >> 5) & 0x07; // Determine orientation based on angle
+    // Update formation angle and z position
+    formation.angle = (formation.angle + formation.angle_speed) % 256;
+    formation.z += formation.z_speed;
+
     reset_sprite();
     // Render game graphics here (anchor in bottom center)
 
@@ -203,9 +197,13 @@ void game_render() {
     add_sprite(player.x, player.y, base_frame + (flip_x ? 0 : 1) + (flip_y ? 0 : 16), flags);
 
     add_enemy_formation();
+}
 
+void game_render() {
+    // Sprite table is updated in game_update
     render_sprites();
 
+    // It is important to change the tilemap during the VBLANK:
     show_number(player.score, 15, 14);
     show_number(active_enemy_count(), 15, 13);
 }
