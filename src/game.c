@@ -16,12 +16,24 @@ uint8_t star_angle[STAR_COUNT];
 int16_t star_z[STAR_COUNT];
 int star_count = STAR_COUNT;
 
+
+
+const struct EnemySprite {
+    uint8_t index[3];       // Tile index for ship pointing up, up-right, and right
+} enemy_sprite[4] = {
+    {{0xF,0x1F,0x2F}},    // Distance 0-63 (smallest)
+    {{0xE,0x1E,0x2E}},    // Distance 64-127
+    {{0xD,0x1D,0x2D}},    // Distance 128-191
+    {{0xC,0x1C,0x2C}},    // Distance 192-255 (Largest)
+};
+
+Formation formation;
+
 void game_init() {
     // Initialize player
     player.x = 32;
     player.y = 240-64;
     player.dx = 0;
-    player.dy = 0;
     player.angle = 64; // Bottom of the screen, facing up
     player.orientation = 0; // Facing up
     player.speed = 4;
@@ -44,6 +56,18 @@ void game_init() {
     show_map_xy(stage_map,4,1,12,0);
     show_map_xy(cylix_map,3,1,0,0);
     show_map_xy(lives_map,3,1,0,14);
+
+    formation.pattern = FORMATION_PATTERN_SPIRAL;
+    formation.phase = 0;
+    formation.angle = 0;
+    formation.z = 0;
+    formation.count = ENEMY_MAX_COUNT;
+    formation.angle_speed = 8;
+    formation.z_speed = 4;
+    for(int i=0;i<ENEMY_MAX_COUNT;i++) {
+        formation.enemies[i].formation = 0;
+        formation.enemies[i].state = ENEMY_STATE_ACTIVE;
+    }
 }
 
 void game_update() {
@@ -52,7 +76,58 @@ void game_update() {
     player.x = ((90 * sin88(player.angle))>>8) + 160; // Move player in a circular path
     player.y = ((90 * cos88(player.angle))>>8) + 120; // Move player in a circular path
     player.orientation = ((player.angle+16) >> 5) & 0x07; // Determine orientation based on angle
+    // Update formation angle and z position
+    formation.angle = (formation.angle + formation.angle_speed) % 256;
+    formation.z += formation.z_speed;
+
     // Additional game update code here
+}
+
+void add_enemy(uint8_t angle, uint8_t z) {
+    // Calculate the orientation
+    uint8_t orientation = ((angle+16) >> 5) & 0x07; // Determine orientation based on angle
+    // Determine the flags
+    uint8_t enemy_size = z>>6; // Determine enemy size based on distance (z)
+    // Frames are: 2,3,18,19=up, 4,5,20,21=up-right, 6,7,22,23=right - then mirror for rest.
+    bool corner = orientation & 0x01; // Check if orientation is a corner (odd)
+    bool vertical = (orientation & 0x02) == 0; // Check if orientation is vertical (0 or 1)
+    uint8_t enemy_index = enemy_sprite[enemy_size].index[(corner ? 2 : (vertical ? 0 : 4))];  // orientation
+    // Flip flags per orientation don't follow a clean bit pattern, so use a lookup table
+    static const uint8_t orientation_flags[8] = {
+        SPRITE_FLAG_NONE,
+        SPRITE_FLAG_FLIP_X,
+        SPRITE_FLAG_FLIP_X,
+        SPRITE_FLAG_FLIP_Y | SPRITE_FLAG_FLIP_X,
+        SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_NONE,
+        SPRITE_FLAG_NONE,
+    };
+    uint8_t flags = orientation_flags[orientation];
+    // Set the sprite for the enemy based on its orientation and index
+    add_sprite((((z>>1) * sin88(angle))>>8) + 160, (((z>>1) * cos88(angle))>>8) + 120, enemy_index, flags);
+}
+
+int active_enemy_count() {
+    int count = 0;
+    for(int i=0;i<formation.count;i++) {
+        if(formation.enemies[i].state == ENEMY_STATE_ACTIVE) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void add_enemy_formation() {
+    // Add enemies based on the current formation
+    for(int i=0;i<formation.count;i++) {
+        if(formation.enemies[i].state == ENEMY_STATE_ACTIVE) {
+            // Calculate the angle and z position for the enemy
+            uint8_t angle = (formation.angle + (i * 32)) % 256; // Spread enemies around the formation angle
+            uint8_t z = formation.z + (i * 16); // Spread enemies in depth
+            add_enemy(angle, z);
+        }
+    }
 }
 
 void game_render() {
@@ -127,10 +202,12 @@ void game_render() {
     add_sprite(player.x-16, player.y, base_frame + (flip_x ? 1 : 0) + (flip_y ? 0 : 16), flags);
     add_sprite(player.x, player.y, base_frame + (flip_x ? 0 : 1) + (flip_y ? 0 : 16), flags);
 
+    add_enemy_formation();
+
     render_sprites();
 
     show_number(player.score, 15, 14);
-    show_number(player.orientation, 15, 13);
+    show_number(active_enemy_count(), 15, 13);
 }
 
 void game_handle_input(uint8_t input, bool down) {
