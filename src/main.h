@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Dale Wick
+// SPDX-License-Identifier: MIT
+// See LICENSE.md for the full license text.
+
 #ifndef MAIN_H
 #define MAIN_H
 

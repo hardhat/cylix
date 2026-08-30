@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Dale Wick
+// SPDX-License-Identifier: MIT
+// See LICENSE.md for the full license text.
+
 const int16_t g_sine_table[256] = {
         0,     6,    12,    18,    25,    31,    37,    43,
        49,    56,    62,    68,    74,    80,    86,    92,

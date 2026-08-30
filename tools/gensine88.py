@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+# Copyright (c) 2026 Dale Wick
+# SPDX-License-Identifier: MIT
+# See LICENSE.md for the full license text.
+
 # Generate a sine table for angles 0-255, where 256 represents a full circle (360 degrees). Values are in 8.8 fixed point format (i.e. 1.0 is represented as 256).
 import math
 
@@ -34,6 +38,10 @@ def print_table(name, ctype, values):
     print("};")
 
 if __name__ == "__main__":
+    print("// Copyright (c) 2026 Dale Wick")
+    print("// SPDX-License-Identifier: MIT")
+    print("// See LICENSE.md for the full license text.")
+    print()
     sine_table = gensine()
     print("uint16_t g_sine_table[256] = {")
     for i in range(0, 256, 8):
