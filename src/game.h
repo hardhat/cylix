@@ -24,7 +24,9 @@ struct Player {
 #define ENEMY_STATE_ACTIVE 0x10
 #define ENEMY_STATE_COOLDOWN 0x20   // Cooldown after shooting
 typedef struct Enemy {
-    uint8_t formation;  // Index into the formation table
+    uint8_t orientation;
+    uint8_t angle;
+    uint8_t z;
     uint8_t state;
 } Enemy;
 

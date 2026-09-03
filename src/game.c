@@ -14,7 +14,7 @@ struct Bullet bullets[BULLET_COUNT];
 
 // Star field background
 #define STAR_SPRITE_INDEX 17 // Assuming the star sprite is at index 17
-#define STAR_COUNT 16 // Number of stars in the star field
+#define STAR_COUNT 8 // Number of stars in the star field
 #define STAR_RADIUS 80 // Fixed orbit radius for stars before perspective projection
 uint8_t star_angle[STAR_COUNT];
 uint8_t star_z[STAR_COUNT];
@@ -67,14 +67,19 @@ void game_init() {
     formation.angle_speed = 8;
     formation.z_speed = 4;
     for(int i=0;i<ENEMY_MAX_COUNT;i++) {
-        formation.enemies[i].formation = 0;
+        formation.enemies[i].orientation = 0;
+        formation.enemies[i].angle = 0;
+        formation.enemies[i].z = 0;
         formation.enemies[i].state = ENEMY_STATE_ACTIVE;
     }
 }
 
-void add_enemy(uint8_t angle, uint8_t z) {
+void add_enemy(Enemy *enemy) {
+    uint8_t angle = enemy->angle;
+    uint8_t z = enemy->z;
     // Calculate the orientation
     uint8_t orientation = ((angle+16+128) >> 5) & 0x07; // Determine orientation based on angle
+    enemy->orientation = orientation;
     // Determine the flags
     uint8_t enemy_size = z>>6; // Determine enemy size based on distance (z)
     // Frames are: 2,3,18,19=up, 4,5,20,21=up-right, 6,7,22,23=right - then mirror for rest.
@@ -110,11 +115,14 @@ int active_enemy_count() {
 void add_enemy_formation() {
     // Add enemies based on the current formation
     for(uint8_t i=0;i<formation.count;i++) {
-        if(formation.enemies[i].state == ENEMY_STATE_ACTIVE) {
+        Enemy *enemy = &formation.enemies[i];
+        if(enemy->state == ENEMY_STATE_ACTIVE) {
             // Spread enemies around the formation angle/depth; uint8_t wrap replaces need for %256
             uint8_t angle = formation.angle + (i << 5);
             uint8_t z = formation.z + (i << 4);
-            add_enemy(angle, z);
+            enemy->angle = angle;
+            enemy->z = z;
+            add_enemy(enemy);
         }
     }
 }
