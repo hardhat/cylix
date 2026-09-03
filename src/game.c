@@ -132,7 +132,7 @@ void game_update() {
     player.angle = player.angle + player.dx; // uint8_t wrap replaces need for %256
     player.x = player_offset_x(player.angle) + 160; // Move player in a circular path
     player.y = player_offset_y(player.angle) + 120; // Move player in a circular path
-    player.orientation = ((player.angle+16) >> 5) & 0x07; // Determine orientation based on angle
+    player.orientation = ((player.angle+8) >> 4) & 0x0f; // Determine orientation based on angle (16 steps, round to nearest)
     // Update formation angle and z position
     formation.angle = formation.angle + formation.angle_speed; // uint8_t wrap replaces need for %256
     formation.z += formation.z_speed;
@@ -186,22 +186,29 @@ void game_update() {
         }
     }
 
-    // Frames are: 2,3,18,19=up, 4,5,20,21=up-right, 6,7,22,23=right - then mirror for rest.
-    bool corner = player.orientation & 0x01; // Check if orientation is a corner (odd)
-    bool vertical = (player.orientation & 0x02) == 0; // Check if orientation is vertical (0 or 1)
-    int base_frame = 2 + (corner ? 2 : (vertical ? 0 : 4));  // orientation
-    // Flip flags per orientation don't follow a clean bit pattern, so use a lookup table
-    static const uint8_t orientation_flags[8] = {
+    // Frames are: 2,3,18,19=up (0deg), 8,9,24,25=up-up-right (22.5deg), 4,5,20,21=up-right (45deg),
+    // 10,11,26,27=up-right-right (67.5deg), 6,7,22,23=right (90deg) - remaining 12 orientations mirror these 5 base frames.
+    static const uint8_t player_base_frame[16] = {2,8,4,10,6,10,4,8,2,8,4,10,6,10,4,8};
+    static const uint8_t player_orientation_flags[16] = {
         SPRITE_FLAG_NONE,
         SPRITE_FLAG_FLIP_X,
         SPRITE_FLAG_FLIP_X,
-        SPRITE_FLAG_FLIP_Y | SPRITE_FLAG_FLIP_X,
+        SPRITE_FLAG_FLIP_X,
+        SPRITE_FLAG_FLIP_X,
+        SPRITE_FLAG_FLIP_X | SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_FLIP_X | SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_FLIP_X | SPRITE_FLAG_FLIP_Y,
         SPRITE_FLAG_FLIP_Y,
         SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_FLIP_Y,
+        SPRITE_FLAG_NONE,
+        SPRITE_FLAG_NONE,
         SPRITE_FLAG_NONE,
         SPRITE_FLAG_NONE,
     };
-    uint8_t flags = orientation_flags[player.orientation];
+    int base_frame = player_base_frame[player.orientation];
+    uint8_t flags = player_orientation_flags[player.orientation];
     bool flip_x = (flags & SPRITE_FLAG_FLIP_X) != 0;
     bool flip_y = (flags & SPRITE_FLAG_FLIP_Y) != 0;
     add_sprite(player.x-16, player.y-16, base_frame + (flip_x ? 1 : 0) + (flip_y ? 16 : 0), flags);
