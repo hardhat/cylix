@@ -38,7 +38,7 @@ void game_init() {
     player.dx = 0;
     player.angle = 64; // Bottom of the screen, facing up
     player.orientation = 0; // Facing up
-    player.speed = 4;
+    player.speed = 8;
     player.health = 100;
     player.score = 0;
     // Initialize star field
