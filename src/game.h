@@ -23,7 +23,10 @@ struct Player {
 #define ENEMY_STATE_DEAD 0x00
 #define ENEMY_STATE_ACTIVE 0x10
 #define ENEMY_STATE_COOLDOWN 0x20   // Cooldown after shooting
+#define ENEMY_STATE_COUNTER_MASK 0x0F // Counter mask for the low 4 bits
 typedef struct Enemy {
+    uint16_t x;
+    uint16_t y;
     uint8_t orientation;
     uint8_t angle;
     uint8_t z;
@@ -47,11 +50,13 @@ typedef struct Formation {
     Enemy enemies[ENEMY_MAX_COUNT];  // Array of enemies in this formation
 } Formation;
 
-struct Bullet {
+typedef struct Bullet {
+    uint16_t x;
+    uint16_t y;
     uint8_t angle;
     uint8_t z;
     bool active;
-};
+} Bullet;
 
 void game_init();
 void game_update();

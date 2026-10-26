@@ -39,14 +39,19 @@ enum INPUT
 extern enum GameState current_state;
 
 void set_game_state(enum GameState new_state);
-/// Fill off-screen sprites table to their default state
+/// Reset the off-screen sprites table to empty
 void reset_sprite(void);
 /// Render all sprites to the screen from the off-screen sprites table
 void render_sprites(void);
 /// Clear all sprites from the screen and off-screen sprites table
 void clear_sprites(void);
 /// Add a sprite to the screen with the given parameters
-void add_sprite(uint16_t x, uint8_t y, uint8_t sprite, uint16_t flags);
+/// @param x The x-coordinate of the sprite
+/// @param y The y-coordinate of the sprite
+/// @param tile The tile index of the sprite
+/// @param flags The flags for the sprite (e.g., priority, flip)
+/// @return The index of the added sprite, or 255 if the sprite table is full
+uint8_t add_sprite(uint16_t x, uint8_t y, uint8_t tile, uint16_t flags);
 /// Show map on layer 0
 void show_map(uint8_t *map,uint8_t width,uint8_t height);
 /// @brief Show number on the screen at the specified tilemap coordinates
@@ -61,8 +66,7 @@ void show_number(uint16_t number, uint8_t x, uint8_t y);
 /// @param x The x-coordinate on the tilemap
 /// @param y The y-coordinate on the tilemap
 void show_map_xy(uint8_t *map,uint8_t width,uint8_t height,uint8_t x,uint8_t y);
-/// @brief Handle input from keyboard and game controller
-/// @param key input key code
+/// @brief Log a message to the debug output
 void debug_log(const char *message);
 /// @brief  Log a formatted message to the debug output
 /// @param format The format string (printf-style)

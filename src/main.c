@@ -185,14 +185,15 @@ void reset_sprite(void)
     sprite_count=0;
 }
 
-void add_sprite(uint16_t x, uint8_t y, uint8_t sprite, uint16_t flags)
+uint8_t add_sprite(uint16_t x, uint8_t y, uint8_t tile, uint16_t flags)
 {
-    if(sprite_count >= 128) return;
+    if(sprite_count >= 128) return 255;
     sprites[sprite_count].x = x+16; // Note sprites are displayed anchored the bottom right corner
     sprites[sprite_count].y = y+16;
-    sprites[sprite_count].tile = sprite;
+    sprites[sprite_count].tile = tile;
     sprites[sprite_count].flags = flags;
     sprite_count++;
+    return sprite_count-1;
 }
 
 void render_sprites(void)

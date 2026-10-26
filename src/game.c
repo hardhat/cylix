@@ -43,7 +43,7 @@ void game_init() {
     player.score = 0;
     // Initialize star field
     for(uint8_t i=0;i<star_count;i++) {
-        star_angle[i] = rand() % 256; // Random angle in range [0, 255]
+        star_angle[i] = rand() & 0xFF; // Random angle in range [0, 255]
         star_z[i] = rand() % 200 + 1; // Random z position in range [1, 200], matches reset value
     }
 
@@ -99,7 +99,9 @@ void add_enemy(Enemy *enemy) {
     };
     uint8_t flags = orientation_flags[orientation];
     // Set the sprite for the enemy based on its orientation and index
-    add_sprite((((z>>1) * sin88(angle))>>8) + 160, (((z>>1) * cos88(angle))>>8) + 120, enemy_index, flags);
+    enemy->x = (((z>>1) * sin88(angle))>>8) + 160;
+    enemy->y = (((z>>1) * cos88(angle))>>8) + 120;
+    add_sprite(enemy->x, enemy->y, enemy_index, flags);
 }
 
 int active_enemy_count() {
@@ -125,6 +127,26 @@ void add_enemy_formation() {
             add_enemy(enemy);
         }
     }
+}
+
+int collide_bullet_with_enemy(uint8_t bullet_index) {
+    if(bullet_index >= BULLET_COUNT) return 0;
+    Bullet *bullet = &bullets[bullet_index];
+    if(!bullet->active) return 0;
+    for(uint8_t i=0;i<formation.count;i++) {
+        Enemy *enemy = &formation.enemies[i];
+        if(enemy->state == ENEMY_STATE_ACTIVE) {
+            // Simple collision check (e.g., bounding box or distance)
+            int16_t dx = (enemy->x) - (bullet->x);
+            int16_t dy = (enemy->y) - (bullet->y);
+            if(dx*dx + dy*dy < 16*16) { // Example collision radius
+                enemy->state = ENEMY_STATE_DEAD;
+                bullet->active = false;
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 void game_update() {
@@ -176,12 +198,15 @@ void game_update() {
         if(bullets[i].active) {
             // Update bullet position based on its angle
             bullets[i].z -= 4; // Move bullet forward
-            if(bullets[i].z <= 0) {
+            int16_t bullet_x = (bullets[i].z * sin88(bullets[i].angle)) >> 8;
+            int16_t bullet_y = (bullets[i].z * cos88(bullets[i].angle)) >> 8;
+	    bullets[i].x = bullet_x;
+	    bullets[i].y = bullet_y;
+            add_sprite(160 + bullet_x, 120 + bullet_y, 1, SPRITE_FLAG_NONE); // Assuming bullet sprite is at index 16
+            if(collide_bullet_with_enemy(i)) {
+                bullets[i].active = false;
+            } else if(bullets[i].z <= 0) {
                 bullets[i].active = false; // Deactivate bullet if it goes off-screen
-            } else {
-                int16_t bullet_x = (bullets[i].z * sin88(bullets[i].angle)) >> 8;
-                int16_t bullet_y = (bullets[i].z * cos88(bullets[i].angle)) >> 8;
-                add_sprite(160 + bullet_x, 120 + bullet_y, 1, SPRITE_FLAG_NONE); // Assuming bullet sprite is at index 16
             }
         }
     }
@@ -258,6 +283,8 @@ void game_handle_input(uint8_t input, bool down) {
                 bullets[i].active = true;
                 bullets[i].angle = player.angle;
                 bullets[i].z = 80; // Start bullet at a distance
+                bullets[i].x = player.x;
+                bullets[i].y = player.y;
                 break;
             }
         }

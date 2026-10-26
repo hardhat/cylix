@@ -804,61 +804,61 @@ Once this is working and profiled, add more sophisticated patterns.
 
 ## Coordinate System
 
-- [ ] Define exact `angle` convention.
-- [ ] Confirm `0–255 = 0–360°`.
-- [ ] Define exact `z` direction.
-- [ ] Define player radius.
-- [ ] Define tube center coordinates.
-- [ ] Confirm fixed-point format used by `sin88()` and `cos88()`.
+- [x] Define exact `angle` convention.
+- [x] Confirm `0–255 = 0–360°`.
+- [x] Define exact `z` direction.
+- [x] Define player radius.
+- [x] Define tube center coordinates.
+- [x] Confirm fixed-point format used by `sin88()` and `cos88()`.
 
 ## Lookup Tables
 
-- [ ] Generate 256-entry sine table.
-- [ ] Generate 256-entry cosine table.
+- [x] Generate 256-entry sine table.
+- [x] Generate 256-entry cosine table.
 - [ ] Generate initial `radius_table[256]`.
 - [ ] Tune perspective curve visually.
-- [ ] Determine whether a separate sprite-size table is necessary.
+- [x] Determine whether a separate sprite-size table is necessary.
 - [ ] Measure ROM/RAM cost of all lookup tables.
 
 ## Player
 
-- [ ] Implement `player_angle`.
-- [ ] Implement player projection.
-- [ ] Implement player movement speed.
-- [ ] Implement angular wrap-around.
-- [ ] Render player sprite.
+- [x] Implement `player_angle`.
+- [x] Implement player projection.
+- [x] Implement player movement speed.
+- [x] Implement angular wrap-around.
+- [x] Render player sprite.
 
 ## Basic Enemies
 
-- [ ] Implement basic enemy structure.
+- [x] Implement basic enemy structure.
 - [ ] Implement enemy type.
-- [ ] Implement enemy alive/dead state.
-- [ ] Implement enemy angle.
-- [ ] Implement enemy z.
-- [ ] Implement basic enemy projection.
-- [ ] Implement enemy sprite rendering.
+- [x] Implement enemy alive/dead state.
+- [x] Implement enemy angle.
+- [x] Implement enemy z.
+- [x] Implement basic enemy projection.
+- [x] Implement enemy sprite rendering.
 - [ ] Test maximum number of active enemies.
 
 ## Formation System
 
-- [ ] Implement `Formation` structure.
-- [ ] Implement formation angle.
-- [ ] Implement formation z.
-- [ ] Implement formation angular velocity.
-- [ ] Implement formation z velocity.
-- [ ] Implement formation count.
+- [x] Implement `Formation` structure.
+- [x] Implement formation angle.
+- [x] Implement formation z.
+- [x] Implement formation angular velocity.
+- [x] Implement formation z velocity.
+- [x] Implement formation count.
 - [ ] Implement formation activation/deactivation.
 - [ ] Implement formation lifecycle.
 
 ## Pattern System
 
-- [ ] Define pattern ID format.
+- [x] Define pattern ID format.
 - [ ] Implement line pattern.
 - [ ] Implement ring pattern.
 - [ ] Implement V pattern.
-- [ ] Implement spiral pattern.
-- [ ] Implement pattern angle offsets.
-- [ ] Implement pattern z offsets.
+- [x] Implement spiral pattern.
+- [x] Implement pattern angle offsets.
+- [x] Implement pattern z offsets.
 - [ ] Implement parameterized patterns.
 - [ ] Implement pattern phase.
 - [ ] Implement pattern transitions.
@@ -878,13 +878,13 @@ Once this is working and profiled, add more sophisticated patterns.
 ## Rendering
 
 - [ ] Implement `radius_table` projection.
-- [ ] Implement screen X calculation.
-- [ ] Implement screen Y calculation.
+- [x] Implement screen X calculation.
+- [x] Implement screen Y calculation.
 - [ ] Determine minimum visible radius.
 - [ ] Determine maximum visible radius.
-- [ ] Implement sprite size selection.
+- [x] Implement sprite size selection.
 - [ ] Implement sprite prioritization.
-- [ ] Implement sprite-budget handling.
+- [x] Implement sprite-budget handling.
 - [ ] Test scanline sprite limitations.
 - [ ] Reserve sprite capacity for player/projectiles/effects.
 
